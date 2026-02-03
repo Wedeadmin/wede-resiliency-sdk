@@ -1,4 +1,4 @@
-Wede: Offline Resiliency SDK (IoTeX / ICP)
+Wede: Offline Resiliency SDK (Multi-Chain DePIN)
 Status: v0.1 (Private Beta) License: Proprietary / Open Core
 Overview
 Wede is a middleware layer designed to provide Offline Resiliency for DePIN (Decentralized
