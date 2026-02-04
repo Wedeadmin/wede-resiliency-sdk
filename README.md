@@ -1,38 +1,82 @@
-Wede: Offline Resiliency SDK (Multi-Chain DePIN)
-Status: v0.1 (Private Beta) License: Proprietary / Open Core
-Overview
-Wede is a middleware layer designed to provide Offline Resiliency for DePIN (Decentralized
-Physical Infrastructure Networks). It ensures that edge devices (sensors, cameras, trackers) can
-maintain state synchronization and local consensus even when IP connectivity degrades or fails
-(e.g., during 5G/4G outages).
-Architecture
-Wede operates on a Dual-Layer &quot;Open Core&quot; Architecture:
-1. The Integration Layer (Open SDK)
- Connectivity Monitoring: Real-time listeners for signal degradation (5G -&gt; 4G -&gt; GSM
--&gt; Dead Zone).
- State Management: Local caching of transaction hashes during downtime.
- Reconciliation API: Handshakes with the core engine to push batched proofs when
-connectivity is restored.
-2. The Opportunistic Sync Engine (Core)
- Protocol Switching: Automated fallback logic (Patent-Pending INPI 120488).
- Conflict Resolution: Cryptographic verification of offline data to prevent double-
-spending or data corruption upon mainnet sync.
-Integration (Coming Soon)
-The public SDK is currently undergoing closed beta testing with select DePIN partners on
-IoTeX.
-Example Usage (Pseudo-code)
-import { WedeClient } from &#39;@wede/sdk&#39;;
+# WEDE Open Source Integration Surface
 
-const wede = new WedeClient({
-chainId: 4689, // IoTeX Mainnet
+WEDE is an offline-first communication infrastructure layer (API/SDK) that helps digital platforms remain operational during network degradation and during cloud or CDN outages.
 
-fallbackMode: &#39;agressive&#39; // Trigger sync on signal degradation
-});
+This repository contains the public, open-source integration surface of WEDE. It is designed to support technical evaluation and engineering due diligence for infrastructure programs and partners, while preserving WEDE’s proprietary core architecture (patent pending).
 
-wede.on(&#39;connectivity_loss&#39;, async (localState) =&gt; {
-console.log(&#39;Switching to Offline Consensus Mode&#39;);
-await wede.lockState(localState);
-});
+## What’s in this repository
+Open-source components:
+- Public SDK contracts (interfaces, models, adapters) for continuity operations
+- Reference integration patterns (flow-preserving)
+- Local testing tools and a connectivity/outage simulator
+- Contract test suite for Engineering Due Diligence
+
+## What’s not in this repository
+Protected, internal components (closed-source):
+- The proprietary WEDE Continuity Engine (decision logic, routing strategy, reconciliation internals)
+- Production provider routing and redundancy configurations
+- Operational risk controls, anti-abuse logic, and production playbooks
+
+## Why WEDE (problem context)
+Most platforms assume connectivity is binary. In real-world conditions, especially in emerging markets where connectivity can be limited or expensive, networks degrade, fragment, and disappear. In highly connected markets, platforms are still exposed to systemic dependencies such as cloud and CDN outages.
+
+WEDE adds a continuity layer that preserves existing application flows and helps maintain service reliability across fintech, health, logistics, marketplaces, government and NGO use cases.
+
+## Documentation
+- `architecture_specs.md`  System logic overview (public view)
+- `integration_guide.md`   Developer onboarding and integration patterns
+- `roadmap_status.md`      Engineering progress and repo maturity signals
+
+## Quick start
+1) Identify 2 to 3 critical operations (example: order confirmation, payment confirmation, dispatch instruction)
+2) Implement stable `operation_id` and idempotency keys
+3) Integrate the SDK surface and run contract tests
+4) Validate behavior using the simulator under:
+   - online
+   - degraded
+   - offline
+   - cloud/CDN dependency outage scenarios
+
+## Development and testing
+Recommended workflow:
+- Run contract tests to validate request/response compatibility
+- Use the simulator to reproduce degraded and outage conditions deterministically
+
+> Note: Command examples depend on your stack. Adjust to your tooling once the repo structure is finalized.
+
+## Security baseline (public summary)
+WEDE enterprise deployments support a Zero Trust posture with:
+- TLS 1.2+/1.3, HTTPS
+- OAuth 2.0 / OpenID Connect, JWT short-lived, PKCE (where applicable)
+- RBAC, ABAC
+- AES-256 at rest
+- HMAC-SHA256, SHA-256
+- MFA/TOTP (where applicable)
+- Anti-replay measures
+- Idempotency keys
+- Payload validation
+- Rate limiting
+- Audit logs
+
+This repository contains no secrets, provider credentials, routing tables, or core execution logic.
+
+## Commercial model
+WEDE is licensed and paid (B2B, B2G). This open-source repository exists to enable safe integration evaluation and demonstrate engineering maturity while protecting patent-pending IP.
+
+## Contribution policy
+Contributions are welcome for:
+- Documentation improvements
+- Contract tests and fixtures
+- Simulator enhancements
+- Reference integrations (non-sensitive)
+
+Do not submit:
+- Attempts to reproduce core decision logic
+- Routing strategies, scoring, reconciliation internals, or production provider configs
+- Any content that could compromise patent-pending IP
+
+## IP notice
+WEDE core architecture is proprietary and patent pending. The open-source components in this repository are limited to the integration surface and non-sensitive tooling.
 
 Contact
 For access to the Private Beta or integration inquiries, please contact
