@@ -1,6 +1,6 @@
 # wede resiliency sdk
 
-Offline-first continuity SDK and API layer for digital platforms operating under degraded connectivity, cloud outages, and infrastructure disruptions.
+Built for early integration, sandbox testing, and pilot deployment in mission-critical digital services.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Status](https://img.shields.io/badge/Status-Active_Development-green.svg)](./roadmap_status.md)
