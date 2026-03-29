@@ -1,158 +1,266 @@
 # architecture_specs.md
-# WEDE Open Source Layer Architecture Specs (System Logic)
+
+# wede public sdk/api architecture specs
 
 ## Purpose
-This repository contains the public, open-source integration surface of WEDE.
-It is designed to support technical evaluation and engineering due diligence for infrastructure programs and partners, while preserving WEDE’s proprietary core architecture (patent pending).
-What is open-source here:
-- Client-side SDK interface primitives (contracts, models, adapters).
-- Reference integration patterns and safe utilities.
-- Local developer tooling for integration validation.
 
-What is NOT included here:
-- The proprietary WEDE Continuity Engine and its internal decision logic.
-- Channel routing strategies, scoring functions, optimization heuristics, and reconciliation internals.
-- Provider routing tables, anti-abuse controls, and any operational playbooks.
+This repository contains the public SDK/API layer of wede.
 
-## System Context
-WEDE is an offline-first communication infrastructure layer that helps digital platforms remain operational during:
-- Network degradation (fragmentation, partial coverage, intermittent connectivity).
-- Cloud, CDN, and centralized dependency outages (including third-party disruptions).
-- High-congestion scenarios (traffic spikes, disaster recovery conditions).
+It is designed for engineering teams that want to test, integrate, and pilot continuity workflows without exposing wede’s proprietary core architecture.
 
-WEDE integrates via API/SDK and is designed to preserve existing application flows. The goal is continuity without forcing platforms to redesign user journeys.
+### What is included here
 
-Primary sectors:
-- Fintech, Health, Logistics, Marketplaces, Government and NGOs.
-Primary environments:
-- Emerging markets with limited or expensive connectivity.
-- Highly connected markets seeking resilience against infrastructure outages.
+- client-side SDK interface primitives
+- typed contracts, models, and adapters
+- safe reference integration patterns
+- local tooling for integration validation
+- simulator and test-oriented components for sandbox environments
 
-## High-Level Architecture
-Public components in this repository:
-1) SDK Interface Layer
-   - Public client contracts
-   - Typed request/response models
-   - Platform adapters (mobile, backend, edge)
-   - Integration hooks that do not expose internal logic
+### What is not included here
 
-2) Provider Adapter Interfaces
-   - Abstract adapters for messaging, voice, and data providers
-   - Pluggable transport interfaces for enterprise environments
+- the proprietary wede continuity engine
+- channel routing strategies
+- scoring functions and optimization heuristics
+- reconciliation internals
+- provider routing tables
+- anti-abuse controls
+- operational playbooks and production risk controls
 
-3) Reference Implementations (Safe)
-   - Mock transports
-   - Sandbox provider stubs
-   - Deterministic test fixtures for local validation
+## System context
 
-4) Integration Validation Tooling
-   - Local simulator for connectivity states
-   - Contract test suite
-   - Sample apps demonstrating correct usage
+wede is an offline-first continuity infrastructure layer that helps digital platforms remain operational during:
 
-Internal (closed-source) components:
-A) Continuity Engine (Proprietary, patent pending)
-   - Degradation detection logic
-   - Channel selection and fallback orchestration
-   - State management and post-outage reconciliation
-   - Cloud outage and dependency-failure mitigation strategies
+- network degradation
+- intermittent or fragmented connectivity
+- cloud and CDN outages
+- centralized dependency failures
+- congestion spikes and partial regional disruption
 
-B) Observability and Risk Controls (Proprietary)
-   - Abuse prevention controls and rate enforcement
-   - Traffic shaping, quotas, and anomaly detection
-   - Production-grade routing and redundancy configurations
+wede integrates via API/SDK and is designed to preserve existing application flows.
 
-## Data Flow (Conceptual)
-This describes observable behavior only. It intentionally omits internal decision-making.
+The goal is continuity without forcing platforms to redesign user journeys.
 
-1) Application creates a Continuity Request
-   - A request represents the intention to complete an operation under uncertain connectivity.
-   - The app provides a stable operation ID and a minimal payload.
+### Primary sectors
 
-2) SDK validates, normalizes, and signs the request
-   - Ensures schema integrity and idempotency requirements.
-   - Applies client-side constraints, not routing logic.
+- fintech
+- health
+- logistics
+- marketplaces
+- government
+- NGOs
+- other mission-critical digital services
 
-3) Request is handed to WEDE service boundary
-   - In open-source mode, this can be a mock endpoint or a partner sandbox.
-   - In enterprise deployments, this is WEDE’s secured API endpoint.
+### Primary environments
 
-4) Continuity result is returned
-   - The app receives a deterministic result object:
-     - accepted, queued, delivered, reconciled, failed
-   - The app updates UI using the same flow, independent of the channel used.
+- emerging markets with limited or expensive connectivity
+- highly connected markets seeking resilience against cloud and infrastructure outages
 
-## Core Design Principles
-1) Offline-first and degradation-aware
-   - Connectivity is not binary. The system assumes partial failure modes.
+## High-level architecture
 
-2) Flow preservation
-   - Integrations should not require redesign of checkout, onboarding, or operational flows.
+### 1. SDK interface layer
 
-3) Least disclosure
-   - The SDK exposes only what developers need to integrate, not how the engine makes decisions.
+Public components include:
 
-4) Deterministic idempotency
-   - Every continuity attempt must be safely retryable.
-   - Idempotency keys prevent duplicate outcomes during unstable connectivity.
+- continuity request contracts
+- typed request and response models
+- platform adapters for mobile, backend, and edge environments
+- integration hooks that do not expose internal logic
 
-5) Vendor-agnostic transport boundary
-   - Enterprise customers can use their preferred providers and routes, via adapters.
+### 2. Provider adapter interfaces
 
-## Interfaces and Contracts (Public)
-### Continuity Operation
-A continuity operation is a single business action that must complete reliably (for example: order confirmation, payment confirmation, appointment confirmation, dispatch instruction).
+Public boundaries include:
 
-Required fields (conceptual):
-- operation_id: stable, unique per business action
-- actor_id: user or system identifier (pseudonymous)
-- timestamp: client time
-- payload: minimal, validated data
-- constraints:
-  - ttl_seconds
-  - max_attempts
-  - allowed_channels (optional)
+- abstract adapters for messaging, voice, and data providers
+- pluggable transport interfaces for enterprise environments
+- test doubles and adapter templates for safe local validation
 
-### Result Model
-- status: accepted | queued | delivered | reconciled | failed
-- operation_id
-- trace_id (non-sensitive)
-- observed_conditions: offline | degraded | online (informational only)
-- timestamps: accepted_at, last_update_at
+### 3. Reference implementations
 
-## Security Model (Public Summary)
-Baseline expectations for the open-source layer:
-- TLS 1.2+/1.3 for transport security
-- HTTPS everywhere
-- OAuth 2.0 / OpenID Connect for authorization (where applicable)
-- JWT short-lived tokens for session or service auth (where applicable)
-- PKCE for public clients (where applicable)
-- RBAC and ABAC for access control (deployment-dependent)
-- AES-256 at rest (server side, deployment-dependent)
-- HMAC-SHA256 for integrity checks (where applicable)
-- SHA-256 for hashing identifiers (where applicable)
-- MFA/TOTP supported where applicable
-- Anti-replay with nonces, timestamps, and IDs
-- Idempotency keys for safe retries
-- Payload validation and schema enforcement
-- Rate limiting and audit logs
+Safe examples may include:
 
-Note: This repository does not contain production secrets, provider credentials, routing logic, or internal risk controls.
+- mock transports
+- sandbox provider stubs
+- deterministic fixtures
+- sample integrations showing correct usage patterns
 
-## Observability (Public Signals)
-What you can instrument without revealing internals:
+### 4. Integration validation tooling
+
+Public tooling may include:
+
+- connectivity state simulator
+- contract test suite
+- sample apps
+- local validation utilities
+
+## Internal components not included in this repository
+
+### A. continuity engine
+
+Proprietary and protected:
+
+- degradation detection logic
+- fallback orchestration
+- channel selection policies
+- state management
+- post-outage reconciliation methods
+- cloud and dependency failure mitigation strategies
+
+### B. observability and risk controls
+
+Proprietary and protected:
+
+- abuse prevention controls
+- traffic shaping and quota logic
+- anomaly detection
+- production routing policies
+- redundancy configurations
+
+## Conceptual data flow
+
+This section describes observable integration behavior only.
+It intentionally omits internal decision-making.
+
+### 1. Application creates a continuity request
+
+A continuity request represents the intention to complete a business operation under uncertain connectivity.
+
+The application provides:
+
+- a stable operation ID
+- a minimal validated payload
+- optional constraints such as TTL or allowed channels
+
+### 2. SDK validates and normalizes the request
+
+The SDK:
+
+- validates schema requirements
+- enforces idempotency expectations
+- applies client-side constraints
+- prepares the request for safe submission
+
+### 3. Request reaches the wede service boundary
+
+In sandbox mode, this may be a mock endpoint or partner environment.
+
+In enterprise deployments, this is a secured wede API boundary.
+
+### 4. Continuity result is returned
+
+The application receives a deterministic result object such as:
+
+- accepted
+- queued
+- delivered
+- reconciled
+- failed
+
+The application can continue using its existing user flow regardless of which underlying continuity path was used.
+
+## Core design principles
+
+### 1. Offline-first and degradation-aware
+
+Connectivity is not binary.
+The system assumes partial failure modes and delayed completion scenarios.
+
+### 2. Flow preservation
+
+Integrations should not require redesign of onboarding, checkout, dispatch, or operational workflows.
+
+### 3. Least disclosure
+
+The SDK exposes only what developers need to integrate, not how the engine makes internal decisions.
+
+### 4. Deterministic idempotency
+
+Every continuity attempt must be safely retryable.
+Idempotency keys prevent duplicate outcomes during unstable connectivity.
+
+### 5. Vendor-agnostic transport boundary
+
+Enterprise customers can integrate with preferred providers through adapter boundaries.
+
+## Interfaces and contracts
+
+### Continuity operation
+
+A continuity operation is a single business action that must complete reliably.
+
+Examples:
+
+- order confirmation
+- payment confirmation
+- appointment confirmation
+- dispatch instruction
+- service acknowledgment
+
+### Required conceptual fields
+
+- `operation_id`
+- `actor_id`
+- `timestamp`
+- `payload`
+- `constraints.ttl_seconds`
+- `constraints.max_attempts`
+- `constraints.allowed_channels` optional
+
+### Result model
+
+- `status`
+- `operation_id`
+- `trace_id`
+- `observed_conditions`
+- `accepted_at`
+- `last_update_at`
+
+Supported status values:
+
+- `accepted`
+- `queued`
+- `delivered`
+- `reconciled`
+- `failed`
+
+## Security model
+
+Baseline expectations for the public SDK/API layer:
+
+- TLS 1.2+/1.3
+- HTTPS
+- OAuth 2.0 / OpenID Connect where applicable
+- short-lived JWT where applicable
+- PKCE for public clients where applicable
+- RBAC and ABAC where applicable
+- AES-256 at rest where deployment requires it
+- HMAC-SHA256 and SHA-256
+- anti-replay protections
+- idempotency keys
+- payload validation
+- schema enforcement
+- rate limiting
+- audit logs
+
+This repository does not contain production secrets, provider credentials, routing logic, or internal risk controls.
+
+## Observability signals
+
+What can be instrumented without exposing internals:
+
 - operation acceptance rate
-- completion latency distributions
+- completion latency distribution
 - retry frequency
 - reconciliation success rate after outages
-- error categories (validation, auth, transport)
+- validation, auth, and transport error categories
 
-## Non-Goals of This Repo
-- It is not a complete implementation of WEDE’s proprietary Continuity Engine.
-- It is not intended to be deployed as-is to production without WEDE enterprise services.
-- It does not expose patent-sensitive logic, routing strategies, or proprietary synchronization methods.
+## Non-goals of this repository
 
-## Compliance and IP Notice
-- WEDE core architecture is proprietary and patent pending.
-- The open-source components here are provided strictly to facilitate integration and developer validation.
-- Do not submit PRs that attempt to reproduce core decision logic or reverse-engineer internal mechanisms.
+- it is not a full implementation of wede’s proprietary continuity engine
+- it is not intended to expose routing or reconciliation logic
+- it is not a standalone production deployment of the full wede enterprise system
+
+## Compliance and IP notice
+
+- wede core architecture remains proprietary and patent pending
+- the public components here exist to facilitate integration, sandbox testing, and early pilot adoption
+- do not submit pull requests that attempt to reproduce core decision logic or reverse-engineer internal mechanisms
