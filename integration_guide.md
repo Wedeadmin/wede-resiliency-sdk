@@ -1,128 +1,211 @@
 # integration_guide.md
-# WEDE SDK Integration Guide (Developer Onboarding)
+
+# wede sdk integration guide
 
 ## Goal
-Integrate WEDE into an existing platform without changing your application flow. WEDE adds a continuity layer so operations can complete during:
-- Network degradation and intermittent connectivity.
-- Cloud or CDN outages and centralized dependency failures.
-- Congestion and partial regional disruptions.
 
-This guide focuses on safe integration patterns and public contracts only. The proprietary Continuity Engine remains internal (patent pending).
+Integrate wede into an existing platform without changing your application flow.
 
-## Quick Start Checklist
-1) Identify 2 to 3 critical operations
-   - Example: order placement, payment confirmation, driver assignment, appointment confirmation.
+wede adds a continuity layer so critical operations can complete during:
 
-2) Add WEDE SDK and configure credentials
-   - Use sandbox credentials first.
-   - Keep secrets outside source control.
+- network degradation and intermittent connectivity
+- cloud or CDN outages
+- centralized dependency failures
+- congestion and partial regional disruption
 
-3) Implement idempotency and stable operation IDs
-   - Ensure every operation can be retried safely.
+This guide focuses on safe integration patterns and public contracts only.
 
-4) Wire minimal payload contracts
-   - Send only what is necessary to complete the operation.
+The proprietary continuity engine remains internal.
 
-5) Implement result handling
-   - Map WEDE status to your existing UI states without redesign.
+## Quick start checklist
 
-6) Run the integration simulator and contract tests
-   - Validate behavior under offline, degraded, and outage conditions.
+### 1. Identify 2 to 3 critical operations
 
-## Integration Modes
-### Mode A: Client SDK (Mobile or Edge)
-Best for apps where the user device experiences the degradation directly.
+Examples:
+
+- order placement
+- payment confirmation
+- driver assignment
+- appointment confirmation
+- field acknowledgement
+
+### 2. Add the wede SDK and configure credentials
+
+- start with sandbox credentials
+- keep secrets outside source control
+- isolate configuration by environment
+
+### 3. Implement stable operation IDs and idempotency
+
+Every critical operation should be safely retryable.
+
+### 4. Wire minimal payload contracts
+
+Send only the minimum data required to complete the business action.
+
+### 5. Implement result handling
+
+Map wede status values to your existing UI or backend state machine without redesign.
+
+### 6. Run the simulator and contract tests
+
+Validate behavior under online, degraded, offline, and outage conditions.
+
+## Integration modes
+
+### Mode A: client SDK
+
+Best for apps where the user device directly experiences degraded connectivity.
 
 What you implement:
+
 - SDK initialization
-- Operation submission
-- Status handling
+- operation submission
+- status handling
+- local retry-safe UX states
 
-### Mode B: Backend SDK (Server)
-Best for platforms that centralize business operations on your server.
+### Mode B: backend SDK
+
+Best for platforms that centralize business operations on their own server.
 
 What you implement:
-- Server-side operation submission
-- Webhook or polling for status updates
-- Observability hooks
 
-### Mode C: Hybrid
-Client submits intent, backend confirms completion. This keeps UX responsive while maintaining server authority.
+- server-side operation submission
+- webhook or polling status updates
+- observability hooks
+- retry-safe completion handling
 
-## Required Concepts
-### Stable Operation ID
+### Mode C: hybrid
+
+Client submits intent, backend confirms final completion.
+
+This mode keeps UX responsive while preserving server authority.
+
+## Required concepts
+
+### Stable operation ID
+
 A deterministic identifier for a business action.
-- Example: `checkout:{user}:{cart_hash}:{timestamp_bucket}`
 
-### Idempotency Key
+Example:
+
+`checkout:{user}:{cart_hash}:{timestamp_bucket}`
+
+### Idempotency key
+
 A unique key that ensures repeated submissions do not duplicate outcomes.
-- Recommended: match your operation_id or a derived stable hash.
 
-### TTL and Attempts
-- ttl_seconds: how long the operation remains valid.
-- max_attempts: cap retries to avoid abuse and unexpected loops.
+Recommended approach:
 
-## Recommended Payload Rules
-- Minimal: include only what is necessary for your operation.
-- Validated: enforce a strict schema before sending.
-- Pseudonymous: avoid raw PII where possible.
-- Deterministic: avoid non-repeatable randomness for idempotent operations.
+- reuse the `operation_id`, or
+- derive a stable hash from the business action
 
-## Typical Flow
-1) User triggers an action (existing flow)
-2) Your app or backend creates a Continuity Request
-3) SDK validates and submits
-4) You receive a status result
-5) Your app continues its existing flow:
-   - immediate success if delivered quickly
-   - “processing” if queued
-   - final confirmation when reconciled after an outage
+### TTL and attempts
 
+- `ttl_seconds` defines how long an operation remains valid
+- `max_attempts` caps retries to avoid abuse and retry loops
 
-## Status Handling Pattern
-- accepted: request received, safe to proceed to “processing”
-- queued: waiting for continuity completion, show “processing”
-- delivered: operation completed, show “confirmed”
-- reconciled: operation completed after an outage, show “confirmed”
-- failed: operation did not complete, show “try again” with a safe retry
+## Recommended payload rules
 
-## Webhooks vs Polling
-Choose one:
-- Webhooks: recommended for server-side integrations, lower latency.
-- Polling: acceptable for simpler pilots, ensure backoff and caps.
+Payloads should be:
 
-## Local Testing and Simulation
-This repository includes tools to demonstrate maturity:
-- Contract tests for requests and responses.
-- A connectivity state simulator with scenarios:
-  - online
-  - degraded
-  - offline
-  - cloud outage simulation (API dependency fails)
-  - CDN outage simulation (static and auth dependencies fail)
+- minimal
+- validated
+- pseudonymous where possible
+- deterministic for safe retries
 
-Run recommendations:
-- Validate idempotency with repeated submissions.
-- Validate TTL behavior.
-- Validate that your UI state machine does not break under delayed completion.
+## Typical flow
 
-## Security Requirements
-You are responsible for secure integration:
-- Use TLS for all communications.
-- Store credentials in secret managers, never in code.
-- Apply least privilege roles.
-- Enforce payload validation and schema constraints.
-- Implement client-side and server-side rate limiting where applicable.
+1. User triggers an action in the existing flow
+2. Your app or backend creates a continuity request
+3. SDK validates and submits the request
+4. You receive a continuity status result
+5. Your app continues its existing flow
 
-Security baseline supported by WEDE enterprise deployments:
-- TLS 1.2+/1.3, HTTPS
-- OAuth 2.0 / OIDC, JWT short-lived, PKCE
-- RBAC, ABAC
+Possible UI outcomes:
+
+- immediate confirmation if delivered quickly
+- processing state if queued
+- final confirmation if reconciled after disruption
+- safe retry path if failed
+
+## Status handling pattern
+
+- `accepted`: request received, safe to move into processing
+- `queued`: waiting for continuity completion, keep processing state
+- `delivered`: operation completed successfully
+- `reconciled`: operation completed after delayed recovery
+- `failed`: operation did not complete, allow safe retry
+
+## Webhooks vs polling
+
+Choose one based on integration maturity.
+
+### Webhooks
+
+Recommended for server-side integrations with lower latency and cleaner event handling.
+
+### Polling
+
+Acceptable for simpler pilots.
+Use backoff and bounded retries.
+
+## Local testing and simulation
+
+This repository may include tooling for:
+
+- contract tests for request and response validation
+- connectivity state simulation
+- cloud outage simulation
+- CDN or dependency failure simulation
+- deterministic fixtures for repeatable validation
+
+Recommended validation:
+
+- repeat submissions with the same idempotency key
+- TTL expiry behavior
+- delayed completion scenarios
+- UI state transitions under degraded conditions
+
+## Security requirements
+
+You are responsible for secure integration.
+
+Minimum expectations:
+
+- use TLS for all communications
+- store credentials in secret managers, never in code
+- apply least-privilege roles
+- enforce payload validation and schema constraints
+- implement rate limiting where applicable
+
+### Security baseline supported by wede enterprise deployments
+
+- TLS 1.2+/1.3
+- HTTPS
+- OAuth 2.0 / OIDC where applicable
+- short-lived JWT and PKCE where applicable
+- RBAC and ABAC
 - AES-256 at rest
-- HMAC-SHA256, SHA-256
+- HMAC-SHA256 and SHA-256
 - MFA/TOTP where applicable
-- Anti-replay measures
-- Idempotency keys
-- Payload validation
-- Rate limiting
-- Audit logs
+- anti-replay protections
+- idempotency keys
+- payload validation
+- rate limiting
+- audit logs
+
+## Recommended first pilot
+
+A strong first pilot usually starts with:
+
+- 1 to 3 critical operations
+- one platform environment
+- sandbox first, production later
+- clear KPIs for acceptance rate, delayed completion, reconciliation success, and retry safety
+
+## Next step
+
+For sandbox access, integration support, or pilot discussions, contact:
+
+`geral@wede.pt`
