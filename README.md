@@ -1,86 +1,112 @@
 # wede resiliency sdk
 
-**Proof of Continuity layer for DePIN and critical digital infrastructure.**
+Offline-first continuity SDK and API layer for digital platforms operating under degraded connectivity, cloud outages, and infrastructure disruptions.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Status](https://img.shields.io/badge/Status-Active_Development-green.svg)](./roadmap_status.md)
 
 ## Overview
-wede is an offline-first resiliency middleware that helps connected systems remain operational during connectivity degradation and infrastructure disruptions, including cloud or CDN outages.
 
-This repository contains the public, open-source integration surface and reference components intended for technical evaluation and engineering due diligence across multiple infrastructure and ecosystem programs. wede’s proprietary continuity engine and internal decision logic are excluded and remain protected (patent pending).
+wede is an offline-first continuity layer that helps digital platforms remain operational when connectivity degrades, when cloud or CDN dependencies fail, or when infrastructure disruptions affect normal service delivery.
+
+This repository provides the public SDK/API surface, reference contracts, safe integration tooling, and onboarding materials needed for early adoption, sandbox testing, and pilot integrations.
+
+wede’s proprietary continuity engine, internal routing logic, reconciliation internals, and production risk controls are not included in this repository and remain protected.
 
 ## What wede enables
-wede provides a continuity layer that allows systems to:
-1. **Buffer** data locally when connectivity degrades or fails.
-2. **Sign and sequence** data packets using chain-native or system-native identity standards (deployment dependent).
-3. **Settle** verifiable Proof of Continuity batches once connectivity is restored, enabling auditability and post-outage reconciliation.
 
-This approach is relevant for emerging markets where connectivity can be limited or expensive, and for highly connected markets exposed to systemic dependency chains and cloud or CDN outages.
+wede helps platforms:
 
-## Supported architectures (active integrations)
-### 1) Polkadot and peaq ecosystem (Substrate)
-- **Native integration:** `pallet-wede` (in development)
-- **Target:** High-trust DePIN use cases such as maritime, agriculture, and mobility on peaq
+1. Buffer critical operations safely when connectivity degrades or fails.
+2. Preserve application flow without forcing a redesign of core user journeys.
+3. Submit deterministic continuity operations with stable identifiers and safe retries.
+4. Return consistent operation states such as accepted, queued, delivered, reconciled, or failed.
+5. Support post-outage confirmation and reconciliation once dependencies recover.
 
-### 2) Arbitrum and EVM (Orbit chains)
-- **Native integration:** Solidity smart contracts and Stylus (Rust)
-- **Target:** High-frequency verified sensor networks and resilient settlement on Arbitrum Orbit chains
+This approach is relevant for mission-critical systems, for emerging markets where connectivity can be limited or expensive, and for highly connected markets exposed to cloud, CDN, or centralized dependency failures.
 
-## Strategic roadmap (high-value integrations)
-To reach chain-agnostic resiliency and broader deployment options, wede is initiating development for:
-- **IoTeX (W3bstream):** Integration with Trusted Execution Environments (TEE) for high-assurance device attestation and continuity proofs
-- **ICP (Internet Computer):** Leveraging canister smart contracts for decentralized storage and verification of large offline datasets
+## Typical use cases
 
-## Technical architecture (public view)
-The SDK is structured around two main modules:
+wede is designed for operations that must not be lost during disruption, including:
 
-- **`wede-client`**  
-  An embedded Rust library (`no_std`) designed for edge devices (for example ESP32 and Raspberry Pi). It handles local buffering, sequencing, and cryptographic signing under degraded or offline conditions.
+- order confirmation
+- payment confirmation
+- dispatch and assignment workflows
+- appointment confirmation
+- field operations and service coordination
+- critical workflow acknowledgements
 
-- **`wede-verifier`**  
-  On-chain or verifiable logic that validates ordering, signatures, and integrity of reconnected data batches once connectivity is restored.
+## Public architecture
 
-This repository intentionally excludes wede’s proprietary continuity engine, routing strategies, reconciliation logic, production provider configurations, and operational risk controls.
+The public SDK/API layer is structured around two main modules:
+
+### `wede-client`
+An embedded or platform-side library for creating, validating, buffering, and submitting continuity operations under offline or degraded conditions.
+
+### `wede-verifier`
+A verification boundary for validating ordering, integrity, and continuity outcomes when operations complete after disruption or delayed recovery.
+
+This repository intentionally excludes the proprietary continuity engine, routing strategies, reconciliation logic, provider configurations, and internal operational controls.
 
 ## Documentation
-- `architecture_specs.md`  Public system logic overview
-- `integration_guide.md`   Developer onboarding and integration patterns
-- `roadmap_status.md`      Engineering progress and maturity signals
 
-## Security baseline (public summary)
+- `architecture_specs.md` Public system architecture and boundaries
+- `integration_guide.md` Developer onboarding and integration patterns
+- `roadmap_status.md` Product and engineering maturity for early adopters
+- `security_policy.md` Security baseline and vulnerability reporting
+- `contributing.md` Contribution rules for the public SDK/API layer
+
+## Security baseline
+
 wede enterprise deployments follow a Zero Trust posture and support:
-- TLS 1.2+/1.3, HTTPS
-- OAuth 2.0 / OpenID Connect, short-lived JWT, PKCE (where applicable)
+
+- TLS 1.2+/1.3
+- HTTPS
+- OAuth 2.0 / OpenID Connect where applicable
+- short-lived JWT and PKCE where applicable
 - RBAC and ABAC
 - AES-256 at rest
 - HMAC-SHA256 and SHA-256
-- MFA/TOTP (where applicable)
-- Anti-replay measures (nonces, timestamps, IDs)
-- Idempotency keys for safe retries
-- Payload validation
-- Rate limiting and audit logs
+- MFA/TOTP where applicable
+- anti-replay measures
+- idempotency keys
+- payload validation
+- rate limiting
+- audit logs
 
 This repository contains no secrets, provider credentials, routing tables, or production execution logic.
 
 ## Commercial model
-wede is licensed and paid (B2B, B2G). This open-source repository exists to enable safe integration evaluation, developer onboarding, and engineering due diligence, while preserving patent-pending intellectual property.
+
+wede is licensed and paid for B2B and B2G deployments.
+
+This open repository exists to support developer onboarding, safe integration, sandbox testing, reference implementations, and early pilot adoption while preserving patent-pending intellectual property.
 
 ## Contribution policy
+
 Contributions are welcome for:
-- Documentation improvements
-- Contract tests and fixtures
-- Simulator and tooling enhancements
-- Reference integrations that do not expose sensitive logic
+
+- documentation improvements
+- contract tests and fixtures
+- simulators and local tooling
+- safe reference integrations
+- bug fixes in public interfaces and adapters
 
 Do not submit:
-- Core decision or routing logic
-- Reconciliation heuristics or scoring strategies
-- Production provider configurations
-- Any material that could compromise patent-pending IP
+
+- core continuity decision logic
+- routing or scoring strategies
+- reconciliation internals
+- production provider configurations
+- any material that could compromise patent-pending IP
 
 ## License
-Licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE).
+
+Licensed under the Apache License, Version 2.0.
+See [LICENSE](./LICENSE).
 
 ## Contact
-For Private Beta access or integration inquiries, contact: `geral@wede.pt`
+
+For sandbox access, pilot discussions, or integration inquiries, contact:
+
+`geral@wede.pt`
